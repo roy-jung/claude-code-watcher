@@ -1,5 +1,7 @@
 # claude-code-watcher (ccw)
 
+![screenshot](./screenshot.png)
+
 VS Code 터미널에서 실행 중인 Claude Code 세션을 실시간으로 모니터링하는 CLI 대시보드입니다.
 
 여러 개의 Claude Code 세션을 동시에 열어 두고 작업할 때, 각 세션의 현재 상태(작업 중 / 대기 중 / 알림)를 한 화면에서 확인할 수 있습니다.
