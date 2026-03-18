@@ -1,0 +1,34 @@
+{
+  "name": "claude-code-watcher",
+  "version": "1.0.0",
+  "description": "Claude Code 세션 CLI 대시보드",
+  "type": "module",
+  "bin": {
+    "ccw": "./bin/ccw.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "hooks/"
+  ],
+  "main": "./src/core/store.mjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "dashboard",
+    "cli",
+    "terminal"
+  ],
+  "author": "roy-jung",
+  "repository": {
+    "type": "git",
+    "url": "https://oss.navercorp.com/roy-jung/claude-code-watcher"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://artifactory.navercorp.com/artifactory/api/npm/npm-naver/"
+  }
+}
