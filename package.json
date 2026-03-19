@@ -28,7 +28,8 @@
     "url": "https://oss.navercorp.com/roy-jung/claude-code-watcher"
   },
   "license": "MIT",
-  "publishConfig": {
-    "registry": "https://artifactory.navercorp.com/artifactory/api/npm/npm-naver/"
+  "scripts": {
+    "publish:internal": "npm publish --registry https://artifactory.navercorp.com/artifactory/api/npm/npm-naver/",
+    "publish:public": "npm publish --registry https://registry.npmjs.org"
   }
 }
