@@ -97,10 +97,15 @@ export function stripAnsi(str) {
 
 /**
  * Returns the terminal display width of a single Unicode code point.
- * CJK/Hangul/fullwidth characters occupy 2 columns; most others occupy 1.
+ * CJK/Hangul/fullwidth/emoji characters occupy 2 columns; most others occupy 1.
+ * Zero-width characters (ZWJ, variation selectors, combining marks) return 0.
  */
 export function charDisplayWidth(cp) {
   if (cp < 0x20 || (cp >= 0x7f && cp < 0xa0)) return 0; // control chars
+  if (cp === 0x200d) return 0; // ZWJ (Zero Width Joiner)
+  if (cp >= 0xfe00 && cp <= 0xfe0f) return 0; // variation selectors VS1–VS16
+  if (cp >= 0xe0100 && cp <= 0xe01ef) return 0; // variation selectors supplement
+  if (cp >= 0x300 && cp <= 0x36f) return 0; // combining diacritical marks
   if (
     (cp >= 0x1100 && cp <= 0x115f) || // Hangul Jamo
     cp === 0x2329 ||
@@ -116,6 +121,9 @@ export function charDisplayWidth(cp) {
     (cp >= 0xff01 && cp <= 0xff60) || // Fullwidth Forms
     (cp >= 0xffe0 && cp <= 0xffe6) || // Fullwidth Signs
     (cp >= 0x1b000 && cp <= 0x1b0ff) || // Kana Supplement
+    (cp >= 0x1f1e0 && cp <= 0x1f1ff) || // Regional indicator symbols (flags)
+    (cp >= 0x1f300 && cp <= 0x1faff) || // Emoji: Misc Symbols, Transport, Supplemental, etc.
+    (cp >= 0x1fb00 && cp <= 0x1fbff) || // Symbols for Legacy Computing
     (cp >= 0x20000 && cp <= 0x2fffd) || // CJK Extension B–F
     (cp >= 0x30000 && cp <= 0x3fffd) // CJK Extension G+
   )
@@ -123,15 +131,34 @@ export function charDisplayWidth(cp) {
   return 1;
 }
 
+// Module-level segmenter for grapheme cluster splitting (Node.js 16+)
+const _segmenter = new Intl.Segmenter();
+
+/**
+ * Returns the terminal display width of a grapheme cluster (one user-perceived character).
+ * Handles ZWJ sequences (👨‍👩‍👧‍👦), regional indicator pairs (🇰🇷), skin tone modifiers (👋🏽),
+ * and VS16 emoji presentation (❤️).
+ */
+export function graphemeDisplayWidth(segment) {
+  const cp = segment.codePointAt(0);
+  const w = charDisplayWidth(cp);
+  // A grapheme cluster containing VS16 (U+FE0F) forces emoji presentation → 2 columns
+  if (w === 1 && segment.includes('\uFE0F')) return 2;
+  return w;
+}
+
 /**
  * Get the visible display width of a string (without ANSI codes).
- * Accounts for wide (2-column) CJK/Hangul characters.
+ * Uses grapheme cluster segmentation to correctly handle emoji sequences,
+ * ZWJ sequences, regional indicator pairs, and skin tone modifiers.
  */
 export function visibleLength(str) {
   const plain = stripAnsi(str);
   let width = 0;
-  for (const char of plain) {
-    width += charDisplayWidth(char.codePointAt(0));
+  for (const { segment } of _segmenter.segment(plain)) {
+    width += graphemeDisplayWidth(segment);
   }
   return width;
 }
+
+export { _segmenter };

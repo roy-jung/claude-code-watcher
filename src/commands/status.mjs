@@ -1,5 +1,5 @@
 import { SessionStore } from '../core/store.mjs';
-import { BOLD, color, FG, RESET } from '../ui/ansi.mjs';
+import { BOLD, color, FG, RESET, visibleLength } from '../ui/ansi.mjs';
 import { formatStatus, truncate } from '../ui/format.mjs';
 
 const store = new SessionStore();
@@ -47,7 +47,7 @@ sessions.forEach((session, i) => {
   const statusColored = formatStatus(session.status);
   const statusPadded =
     statusColored +
-    ' '.repeat(Math.max(0, colW.status - session.status.length));
+    ' '.repeat(Math.max(0, colW.status - visibleLength(session.status)));
 
   console.log(`${num} ${project} ${statusPadded} ${msg} ${since}`);
 });

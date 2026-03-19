@@ -1,27 +1,27 @@
 import {
-  charDisplayWidth,
+  _segmenter,
   color,
   FG,
-  RESET,
+  graphemeDisplayWidth,
   visibleLength,
 } from './ansi.mjs';
 
 /**
  * Truncate a string to maxLen terminal columns, appending ellipsis if needed.
- * Correctly handles wide (2-column) CJK/Hangul characters.
+ * Uses grapheme cluster segmentation to correctly handle emoji and wide characters.
  */
 export function truncate(str, maxLen) {
   if (!str) return '';
   str = str.replace(/\r?\n/g, ' ');
   let width = 0;
   let i = 0;
-  for (const char of str) {
-    const cw = charDisplayWidth(char.codePointAt(0));
+  for (const { segment } of _segmenter.segment(str)) {
+    const cw = graphemeDisplayWidth(segment);
     if (width + cw > maxLen - 1) {
-      return str.slice(0, i) + '…';
+      return `${str.slice(0, i)}…`;
     }
     width += cw;
-    i += char.length; // handles surrogate pairs (emoji, CJK Extension B+)
+    i += segment.length;
   }
   return str;
 }

@@ -1,6 +1,6 @@
 {
   "name": "claude-code-watcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Claude Code 세션 CLI 대시보드",
   "type": "module",
   "bin": {
