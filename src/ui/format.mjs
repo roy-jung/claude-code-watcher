@@ -61,24 +61,30 @@ export function formatTime(date) {
 export function statusColor(status) {
   switch (status) {
     case 'working':
-      return FG.YELLOW;
+      return FG.BRIGHT_BLUE;
     case 'waiting':
-      return FG.GREEN;
-    case 'stale':
-      return FG.BRIGHT_BLACK;
+      return FG.BRIGHT_WHITE;
     case 'notification':
-      return FG.CYAN;
-    case 'error':
-      return FG.RED;
+      return FG.BRIGHT_RED;
     default:
-      return FG.WHITE;
+      return FG.BRIGHT_BLACK;
   }
+}
+
+const STATUS_LABEL = {
+  working:      '작업중',
+  waiting:      '대기중',
+  notification: '응답 요청',
+};
+
+export function statusLabel(status) {
+  return STATUS_LABEL[status] ?? status;
 }
 
 /**
  * Return a colored status label string.
  */
 export function formatStatus(status) {
-  return color(statusColor(status), status);
+  return color(statusColor(status), statusLabel(status));
 }
 

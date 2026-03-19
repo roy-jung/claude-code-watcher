@@ -1,5 +1,3 @@
-export const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
-
 /**
  * Parse raw JSON data into a SessionRecord.
  * Returns null if the data is invalid.
@@ -40,7 +38,7 @@ export function parseSession(raw, filename) {
 export function deriveSession(record, now = new Date()) {
   const updatedAt = parseDate(record.updated) || now;
   const startedAt = parseDate(record.startedAt) || now;
-  const status = classifyStatus(record.status, updatedAt, now);
+  const status = classifyStatus(record.status);
 
   return {
     ...record,
@@ -53,18 +51,11 @@ export function deriveSession(record, now = new Date()) {
 }
 
 /**
- * Classify session status, marking as stale if inactive for > STALE_THRESHOLD_MS.
+ * Classify session status.
  * @param {string} status
- * @param {Date} updatedAt
- * @param {Date} now
  * @returns {string}
  */
-export function classifyStatus(status, updatedAt, now = new Date()) {
-  if (status === 'error') return 'error';
-
-  const sinceMs = now - updatedAt;
-  if (sinceMs > STALE_THRESHOLD_MS && status !== 'working' && status !== 'notification') return 'stale';
-
+export function classifyStatus(status) {
   return status || 'waiting';
 }
 

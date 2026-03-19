@@ -23,11 +23,9 @@ ${BOLD}Dashboard Keys:${RESET}
   ${color(FG.CYAN, 'q')}  /  ${color(FG.CYAN, 'Ctrl+C')}   종료
 
 ${BOLD}Status Colors:${RESET}
-  ${color(FG.YELLOW, 'working')}        Claude가 응답을 처리 중
-  ${color(FG.GREEN, 'waiting')}        사용자 입력 대기 중
-  ${color(FG.CYAN, 'notification')}   알림 수신됨
-  ${color(FG.BRIGHT_BLACK, 'stale')}          10분 이상 비활성
-  ${color(FG.RED, 'error')}          오류 발생
+  ${color(FG.BRIGHT_BLUE, 'working')}        Claude가 응답을 처리 중
+  ${color(FG.BRIGHT_WHITE, 'waiting')}        사용자 입력 대기 중
+  ${color(FG.BRIGHT_RED, 'notification')}   알림 수신됨
 
 ${BOLD}Session Data:${RESET}
   ~/.claude/dashboard/active/<sessionId>.json

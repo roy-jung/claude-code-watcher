@@ -20,6 +20,7 @@ import {
   padEnd,
   padStart,
   statusColor,
+  statusLabel,
   truncate,
 } from './format.mjs';
 
@@ -224,28 +225,56 @@ export class Renderer {
     const lines = [];
 
     if (cols < MIN_WIDTH) {
-      lines.push('');
-      lines.push(
-        color(FG.RED, `  Terminal too narrow (min ${MIN_WIDTH} cols)`),
-      );
-      lines.push(color(FG.BRIGHT_BLACK, `  Current: ${cols} cols`));
-      this.#flush(lines, rows);
-      return;
-    }
-
-    // Use cols-1 so the box never touches the terminal's last column,
-    // avoiding auto-wrap artifacts in terminals like Ghostty.
-    const w = cols - 1;
-
-    if (this.#view === 'detail' && this.#sessions.length > 0) {
-      this.#renderDetail(lines, w, rows);
+      this.#renderCompact(lines, cols, rows);
     } else {
-      this.#renderList(lines, w, rows);
+      // Use cols-1 so the box never touches the terminal's last column,
+      // avoiding auto-wrap artifacts in terminals like Ghostty.
+      const w = cols - 1;
+      if (this.#view === 'detail' && this.#sessions.length > 0) {
+        this.#renderDetail(lines, w, rows);
+      } else {
+        this.#renderList(lines, w, rows);
+      }
     }
     this.#flush(lines, rows);
   }
 
-  #renderHeader(lines, cols, now) {
+  /** Compact view: project name + colored status indicator (COMPACT_WIDTH <= cols < MIN_WIDTH). */
+  #renderCompact(lines, cols, rows) {
+    const w = cols - 1; // avoid auto-wrap like full view
+    const inner = w - 2; // between │ and │
+
+    // Top border with title: ╭─ Claude Code Watcher ───╮
+    const titleStr = '─ Claude Code Watcher ';
+    const rightDashes = Math.max(0, inner - titleStr.length);
+    lines.push(color(FG.WHITE, `╭${titleStr}${'─'.repeat(rightDashes)}╮`));
+
+    if (this.#sessions.length === 0) {
+      lines.push(
+        `${color(FG.WHITE, '│')}${padEnd(color(FG.BRIGHT_BLACK, ' ○'), inner)}${color(FG.WHITE, '│')}`,
+      );
+    } else {
+      const nameW = inner - 3; // ' ● ' = 3
+      for (const session of this.#sessions) {
+        const dot = color(statusColor(session.status), '●');
+        const name = color(statusColor(session.status), padEnd(truncate(session.displayName, nameW), nameW));
+        lines.push(
+          `${color(FG.WHITE, '│')} ${dot} ${name}${color(FG.WHITE, '│')}`,
+        );
+      }
+    }
+
+    lines.push(color(FG.WHITE, `╰${'─'.repeat(inner)}╯`));
+
+    const credit = color(FG.BRIGHT_BLACK, '@roy-jung');
+    lines.push(
+      ' '.repeat(Math.max(0, w - visibleLength('@roy-jung'))) + credit,
+    );
+
+    this.#flush(lines, rows);
+  }
+
+#renderHeader(lines, cols, now) {
     const count = this.#sessions.length;
     const inner = cols - 4;
     const dot = count > 0 ? color(FG.CYAN, '●') : color(FG.BRIGHT_BLACK, '○');
@@ -304,7 +333,9 @@ export class Renderer {
           color(isSelected ? FG.CYAN : FG.BRIGHT_BLACK, numStr.padStart(NUM_W)),
           NUM_W,
         );
-        const proj = padEnd(truncate(session.displayName, projW), projW);
+        const rc = str => color(statusColor(session.status), str);
+
+        const proj = rc(padEnd(truncate(session.displayName, projW), projW));
         const subagents = this.#store.getSubagents(session.sessionId);
         const activeSubCount = subagents.filter(
           s => s.status === 'working',
@@ -313,7 +344,7 @@ export class Renderer {
         if (activeSubCount > 0) {
           const badge = color(FG.BRIGHT_BLACK, `[${activeSubCount}]`);
           const badgeW = 1 + String(activeSubCount).length + 2; // ' [N]'
-          const label = truncate(session.status, STAT_W - badgeW);
+          const label = truncate(statusLabel(session.status), STAT_W - badgeW);
           stat = padEnd(
             `${coloredStatus(session.status, label)} ${badge}`,
             STAT_W,
@@ -321,14 +352,11 @@ export class Renderer {
         } else {
           stat = padEnd(formatStatus(session.status), STAT_W);
         }
-        const msg = padEnd(
+        const msg = rc(padEnd(
           truncate(session.message || session.lastResponse || '', msgW),
           msgW,
-        );
-        const time = color(
-          FG.BRIGHT_BLACK,
-          padEnd(session.sinceLabel || '', TIME_W),
-        );
+        ));
+        const time = rc(padEnd(session.sinceLabel || '', TIME_W));
 
         const rowLine = buildDataLine(sel, num, proj, stat, msg, time);
         lines.push(

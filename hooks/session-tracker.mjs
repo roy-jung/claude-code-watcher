@@ -73,10 +73,18 @@ switch (hookEvent) {
     break;
   }
 
-  case 'PreToolUse':
+  case 'PreToolUse': {
+    // PreToolUse means Claude is actively about to use a tool — always 'working'.
+    // This also covers the case where UserPromptSubmit didn't fire (hook failure, etc.).
+    const cur = existing.status ?? 'working';
+    status  = 'working';
+    message = cur === 'waiting' ? 'Processing...' : (existing.message ?? 'Processing...');
+    break;
+  }
+
   case 'PostToolUse': {
-    // Restore to 'working' from 'notification' (permission granted).
-    // Preserve 'waiting' and other states to avoid spurious transitions after Stop.
+    // Only restore to 'working' from active states; preserve 'waiting' to avoid
+    // spurious transitions when a delayed PostToolUse arrives after Stop.
     const cur = existing.status ?? 'working';
     status  = (cur === 'notification' || cur === 'working') ? 'working' : cur;
     message = existing.message ?? 'Processing...';
